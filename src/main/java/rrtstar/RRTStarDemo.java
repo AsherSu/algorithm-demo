@@ -1,13 +1,12 @@
-package astar;
+package rrtstar;
 
 import java.util.List;
 
 /**
- * A* 算法演示
+ * RRT* 算法演示
  */
-public class AStarDemo {
+public class RRTStarDemo {
     public static void main(String[] args) {
-        // 0=可通行, 1=障碍物
         int[][] grid = {
                 {0, 0, 0, 0, 0, 0, 0},
                 {0, 1, 1, 1, 1, 1, 0},
@@ -18,31 +17,51 @@ public class AStarDemo {
                 {0, 0, 0, 0, 0, 0, 0}
         };
 
-        AStar astar = new AStar(grid);
-        List<AStarNode> path = astar.findPath(0, 0, 6, 6);
+        int rows = grid.length;
+        int cols = grid[0].length;
+        double cellWidth = 1.0;
+        double cellHeight = 1.0;
+        double width = cols * cellWidth;
+        double height = rows * cellHeight;
+
+        RRTStar.ObstacleChecker checker = RRTStar.gridObstacleChecker(grid, cellWidth, cellHeight);
+        RRTStar rrtStar = new RRTStar(width, height, checker, 0.8, 0.5, 0.12, 2.5);
+
+        double startX = 0.5;
+        double startY = 0.5;
+        double goalX = cols - 0.5;
+        double goalY = rows - 0.5;
+
+        List<RRTStarNode> path = rrtStar.findPath(startX, startY, goalX, goalY);
 
         if (path.isEmpty()) {
             System.out.println("未找到路径");
         } else {
-            System.out.println("找到路径，共 " + path.size() + " 步:");
+            double totalCost = path.get(path.size() - 1).cost;
+            System.out.println("找到路径，共 " + path.size() + " 个节点，总代价: " + String.format("%.2f", totalCost));
             for (int i = 0; i < path.size(); i++) {
-                AStarNode AStarNode = path.get(i);
-                System.out.print(AStarNode);
+                RRTStarNode node = path.get(i);
+                System.out.print(node);
                 if (i < path.size() - 1) {
                     System.out.print(" -> ");
                 }
             }
             System.out.println();
-            printGridWithPath(grid, path);
+            printGridWithPath(grid, path, cellWidth, cellHeight);
         }
     }
 
-    private static void printGridWithPath(int[][] grid, List<AStarNode> path) {
+    private static void printGridWithPath(int[][] grid, List<RRTStarNode> path,
+                                          double cellWidth, double cellHeight) {
         int rows = grid.length;
         int cols = grid[0].length;
         boolean[][] isPath = new boolean[rows][cols];
-        for (AStarNode AStarNode : path) {
-            isPath[AStarNode.x][AStarNode.y] = true;
+        for (RRTStarNode node : path) {
+            int r = (int) (node.y / cellHeight);
+            int c = (int) (node.x / cellWidth);
+            if (r >= 0 && r < rows && c >= 0 && c < cols) {
+                isPath[r][c] = true;
+            }
         }
 
         System.out.println("\n网格可视化 (S=起点, E=终点, *=路径, #=障碍):");

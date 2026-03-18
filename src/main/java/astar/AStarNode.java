@@ -3,15 +3,15 @@ package astar;
 /**
  * 网格节点，用于 A* 算法
  */
-public class Node implements Comparable<Node> {
+public class AStarNode implements Comparable<AStarNode> {
     public final int x;
     public final int y;
     public double g;  // 从起点到当前节点的实际代价
     public double h;  // 从当前节点到终点的启发式估计代价
     public double f;  // f = g + h
-    public Node parent;
+    public AStarNode parent;
 
-    public Node(int x, int y) {
+    public AStarNode(int x, int y) {
         this.x = x;
         this.y = y;
         this.g = Double.MAX_VALUE;
@@ -31,7 +31,7 @@ public class Node implements Comparable<Node> {
     }
 
     @Override
-    public int compareTo(Node other) {
+    public int compareTo(AStarNode other) {
         return Double.compare(this.f, other.f);
     }
 
@@ -39,8 +39,8 @@ public class Node implements Comparable<Node> {
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
-        Node node = (Node) obj;
-        return x == node.x && y == node.y;
+        AStarNode AStarNode = (AStarNode) obj;
+        return x == AStarNode.x && y == AStarNode.y;
     }
 
     @Override

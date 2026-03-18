@@ -31,14 +31,14 @@ public class AStar {
     /**
      * 使用欧几里得距离作为启发式函数
      */
-    private double heuristic(Node a, Node b) {
+    private double heuristic(AStarNode a, AStarNode b) {
         return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
     }
 
     /**
      * 使用曼哈顿距离作为启发式函数（适用于仅四方向移动）
      */
-    private double manhattanHeuristic(Node a, Node b) {
+    private double manhattanHeuristic(AStarNode a, AStarNode b) {
         return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
     }
 
@@ -52,29 +52,29 @@ public class AStar {
     /**
      * 执行 A* 搜索，返回从起点到终点的路径，若无路径则返回空列表
      */
-    public List<Node> findPath(int startX, int startY, int endX, int endY) {
+    public List<AStarNode> findPath(int startX, int startY, int endX, int endY) {
         return findPath(startX, startY, endX, endY, true);
     }
 
     /**
      * @param allowDiagonal 是否允许斜向移动
      */
-    public List<Node> findPath(int startX, int startY, int endX, int endY, boolean allowDiagonal) {
+    public List<AStarNode> findPath(int startX, int startY, int endX, int endY, boolean allowDiagonal) {
         if (!isValid(startX, startY) || !isValid(endX, endY)) {
             return Collections.emptyList();
         }
 
-        Node start = new Node(startX, startY);
-        Node end = new Node(endX, endY);
+        AStarNode start = new AStarNode(startX, startY);
+        AStarNode end = new AStarNode(endX, endY);
         start.setG(0);
         start.setH(heuristic(start, end));
 
         // 按照优先级存放待处理的节点，优先级由 f 值决定
-        PriorityQueue<Node> openSet = new PriorityQueue<>();
+        PriorityQueue<AStarNode> openSet = new PriorityQueue<>();
         // 用于查询
-        Set<Node> openSetLookup = new HashSet<>();
+        Set<AStarNode> openSetLookup = new HashSet<>();
         // 存放计算过的节点
-        Map<String, Node> allNodes = new HashMap<>();
+        Map<String, AStarNode> allNodes = new HashMap<>();
         allNodes.put(key(startX, startY), start);
 
         openSet.add(start);
@@ -83,7 +83,7 @@ public class AStar {
         int[][] directions = allowDiagonal ? DIRECTIONS : DIRECTIONS_4;
 
         while (!openSet.isEmpty()) {
-            Node current = openSet.poll();
+            AStarNode current = openSet.poll();
             openSetLookup.remove(current);
 
             if (current.x == endX && current.y == endY) {
@@ -96,7 +96,7 @@ public class AStar {
 
                 if (!isValid(nx, ny)) continue;
 
-                Node neighbor = allNodes.computeIfAbsent(key(nx, ny), k -> new Node(nx, ny));
+                AStarNode neighbor = allNodes.computeIfAbsent(key(nx, ny), k -> new AStarNode(nx, ny));
 
                 // 斜向移动代价为 sqrt(2)，直线移动代价为 1
                 double moveCost = (dir[0] != 0 && dir[1] != 0) ? Math.sqrt(2) : 1.0;
@@ -123,8 +123,8 @@ public class AStar {
         return x + "," + y;
     }
 
-    private List<Node> reconstructPath(Node current) {
-        List<Node> path = new ArrayList<>();
+    private List<AStarNode> reconstructPath(AStarNode current) {
+        List<AStarNode> path = new ArrayList<>();
         while (current != null) {
             path.add(0, current);
             current = current.parent;
