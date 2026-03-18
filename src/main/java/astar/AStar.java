@@ -100,13 +100,14 @@ public class AStar {
 
                 // 斜向移动代价为 sqrt(2)，直线移动代价为 1
                 double moveCost = (dir[0] != 0 && dir[1] != 0) ? Math.sqrt(2) : 1.0;
+                // 上一步的距离 + 本次移动
                 double tentativeG = current.g + moveCost;
 
+                // 本次计算的距离更近，更新当前点
                 if (tentativeG < neighbor.g) {
                     neighbor.parent = current;
                     neighbor.setG(tentativeG);
                     neighbor.setH(heuristic(neighbor, end));
-
                     if (!openSetLookup.contains(neighbor)) {
                         openSet.add(neighbor);
                         openSetLookup.add(neighbor);
