@@ -58,6 +58,8 @@ public class AStar {
 
     /**
      * @param allowDiagonal 是否允许斜向移动
+     * 找到总代价最小的点移动，总代价 = 已经走过的距离 + 预估剩余距离
+     * 广度优先搜索 + 启发式引导，优先处理 f 值较小的节点
      */
     public List<AStarNode> findPath(int startX, int startY, int endX, int endY, boolean allowDiagonal) {
         if (!isValid(startX, startY) || !isValid(endX, endY)) {
