@@ -14,6 +14,7 @@ public class RRTStar {
     private final double stepSize;
     private final double goalThreshold;
     private final double goalBias;
+    // 搜索半径
     private final double searchRadius;
     private final Random random;
     private final ObstacleChecker obstacleChecker;
@@ -54,6 +55,13 @@ public class RRTStar {
         return findPath(startX, startY, goalX, goalY, 10000);
     }
 
+    /**
+     * 1、随机采样一个点，小于goalBias则直接采样目标位置
+     * 2、在树中找到距离采样点最近的节点
+     * 3、从最近节点朝采样点方向生成一个新节点，距离不超过stepSize
+     * 4、如果 新节点不在障碍物中 且 节点之间的线段不穿过障碍物，则将新节点加入树中
+     * 5、如果新节点距离目标小于goalThreshold，则认为找到路径
+     */
     public List<RRTStarNode> findPath(double startX, double startY, double goalX, double goalY, int maxIterations) {
         if (obstacleChecker.isObstacle(startX, startY) || obstacleChecker.isObstacle(goalX, goalY)) {
             return new ArrayList<>();
@@ -85,12 +93,16 @@ public class RRTStar {
                 continue;
             }
 
+            // RRT star 特殊逻辑
             double r = Math.min(searchRadius, gammaRRTStar(tree.size()));
+            // 找到新节点半径内的所有节点
             List<RRTStarNode> nearNodes = findNear(tree, newNode.x, newNode.y, r);
 
             RRTStarNode bestParent = null;
             double bestCost = Double.MAX_VALUE;
 
+            // 优选父节点
+            // 计算新节点的最佳 父节点 和 总代价
             for (RRTStarNode near : nearNodes) {
                 double cost = near.cost + near.distanceTo(newNode);
                 if (cost < bestCost && !lineIntersectsObstacle(near.x, near.y, newNode.x, newNode.y)) {
@@ -98,25 +110,27 @@ public class RRTStar {
                     bestCost = cost;
                 }
             }
-
             if (bestParent == null) {
                 continue;
             }
-
             newNode = new RRTStarNode(newNode.x, newNode.y, bestParent, bestCost);
             tree.add(newNode);
 
+            // 重新连接附近节点 拔线重连
             for (RRTStarNode near : nearNodes) {
+                // 附近节点到新节点的最近距离
                 double costThroughNew = newNode.cost + newNode.distanceTo(near);
                 if (costThroughNew < near.cost && !lineIntersectsObstacle(newNode.x, newNode.y, near.x, near.y)) {
                     near.parent = newNode;
                     near.cost = costThroughNew;
+                    // 代价变化，传播代价
                     propagateCostToDescendants(near, tree);
                 }
             }
 
             if (newNode.distanceTo(goalX, goalY) <= goalThreshold) {
                 double goalCost = newNode.cost + newNode.distanceTo(goalX, goalY);
+                // 更新目标节点
                 if (goalCost < bestGoalCost) {
                     bestGoalCost = goalCost;
                     bestGoalNode = newNode;
