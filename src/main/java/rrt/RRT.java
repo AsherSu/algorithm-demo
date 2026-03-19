@@ -9,12 +9,17 @@ import java.util.Random;
  * 在二维连续空间中寻找从起点到终点的可行路径
  */
 public class RRT {
+    // 边界范围
     private final double width;
     private final double height;
+    // 树向目标方向扩展的最大步长
     private final double stepSize;
+    // 判断已到达目标的距离阈值，当新节点距离目标小于该值时认为已找到路径
     private final double goalThreshold;
+    // 目标偏置概率，以该概率直接采样目标位置
     private final double goalBias;
     private final Random random;
+    // 障碍检测
     private final ObstacleChecker obstacleChecker;
 
     public RRT(double width, double height, ObstacleChecker obstacleChecker) {
@@ -56,6 +61,11 @@ public class RRT {
 
     /**
      * 执行 RRT 搜索，返回从起点到终点的路径
+     * 1、随机采样一个点，小于goalBias则直接采样目标位置
+     * 2、在树中找到距离采样点最近的节点
+     * 3、从最近节点朝采样点方向生成一个新节点，距离不超过stepSize
+     * 4、如果 新节点不在障碍物中 且 节点之间的线段不穿过障碍物，则将新节点加入树中
+     * 5、如果新节点距离目标小于goalThreshold，则认为找到路径
      */
     public List<RRTNode> findPath(double startX, double startY, double goalX, double goalY) {
         return findPath(startX, startY, goalX, goalY, 10000);
@@ -66,15 +76,18 @@ public class RRT {
             return new ArrayList<>();
         }
 
+        // 正在构建的随机搜索树
         List<RRTNode> tree = new ArrayList<>();
         tree.add(new RRTNode(startX, startY, null));
 
+        // 目标节点
         RRTNode goalNode = new RRTNode(goalX, goalY, null);
 
         for (int i = 0; i < maxIterations; i++) {
             double sampleX;
             double sampleY;
 
+            // 以 goalBias 的概率直接采样目标位置，否则随机采样
             if (random.nextDouble() < goalBias) {
                 sampleX = goalX;
                 sampleY = goalY;
@@ -83,7 +96,9 @@ public class RRT {
                 sampleY = random.nextDouble() * height;
             }
 
+            // 在树中找到距离采样点最近的节点
             RRTNode nearest = findNearest(tree, sampleX, sampleY);
+            // 从最近节点朝采样点方向扩展一个新节点
             RRTNode newNode = steer(nearest, sampleX, sampleY);
 
             if (newNode != null && !obstacleChecker.isObstacle(newNode.x, newNode.y)
