@@ -119,26 +119,46 @@ public class AntColony {
         return route;
     }
 
+    /**
+     * 根据信息素浓度和启发式信息选择下一个城市
+     * @param cur 当前所在城市索引
+     * @param visited 记录已访问城市的数组
+     * @return 下一个城市的索引
+     */
     private int selectNext(int cur, boolean[] visited) {
+        // 存储每个未访问城市的转移概率
         double[] prob = new double[n];
+        // 所有未访问城市的概率总和
         double sum = 0;
+        
+        // 计算每个未访问城市的转移概率
         for (int j = 0; j < n; j++) {
             if (!visited[j]) {
+                // 启发式信息：距离的倒数，避免除零添加微小值
                 double eta = 1.0 / (distance[cur][j] + 1e-6);
+                // 转移概率 = (信息素^alpha) * (启发式信息^beta)
                 prob[j] = Math.pow(pheromone[cur][j], alpha) * Math.pow(eta, beta);
                 sum += prob[j];
             }
         }
+        
+        // 生成一个随机数用于轮盘赌选择
         double r = random.nextDouble() * sum;
+        
+        // 轮盘赌选择下一个城市
         for (int j = 0; j < n; j++) {
             if (!visited[j]) {
                 r -= prob[j];
                 if (r <= 0) return j;
             }
         }
+        
+        // 如果因浮点精度问题未选中，返回第一个未访问城市
         for (int j = 0; j < n; j++) {
             if (!visited[j]) return j;
         }
+        
+        // 理论上不会执行到这里
         return -1;
     }
 
